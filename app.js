@@ -1,95 +1,79 @@
 (() => {
-  const symbols = ["🐯", "💎", "👑", "⭐", "🪙"];
-  const balanceEl = document.getElementById("balance");
-  const openButton = document.getElementById("openGame");
-  const closeButton = document.getElementById("closeGame");
-  const gamePanel = document.getElementById("gamePanel");
-  const spinButton = document.getElementById("spinButton");
-  const resultMessage = document.getElementById("resultMessage");
-  const historyList = document.getElementById("historyList");
-  let balance = 1000;
-  let rounds = 0;
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+  const fmt = n => Math.max(0, Math.floor(n)).toLocaleString("pt-BR");
+  const STORE = "aureon-demo-v2";
+  const defaults = { balance:1000, points:0, lastDaily:0, lastChest:0, history:[], profileName:"", chests:1 };
+  let state = {...defaults};
+  try { state = {...defaults, ...JSON.parse(localStorage.getItem(STORE) || "{}")}; } catch {}
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {} };
+  const toast = message => { const el=$("#toast"); el.textContent=message; el.classList.add("show"); clearTimeout(toast.timer); toast.timer=setTimeout(()=>el.classList.remove("show"),2800); };
+  const credit = amount => { state.balance += amount; save(); renderBalances(); };
+  const spend = amount => { if(state.balance<amount){toast("Créditos fictícios insuficientes. Resgate o bônus diário.");return false;} state.balance-=amount; save(); renderBalances(); return true; };
+  const record = (label, amount) => { state.history.unshift({label,amount,at:Date.now()}); state.history=state.history.slice(0,12); save(); renderHistory(); };
+  function renderBalances(){ ["#headerBalance","#homeBalance","#walletBalance"].forEach(s=>{const el=$(s);if(el)el.textContent=fmt(state.balance)}); $("#homePoints").textContent=fmt(state.points); $("#pointsTotal").textContent=fmt(state.points); $("#homeChests").textContent=fmt(state.chests); }
+  function renderHistory(){ const el=$("#pointsHistory"); if(!state.history.length){el.innerHTML="<p>Nenhuma atividade registrada ainda.</p>";return;} el.replaceChildren(...state.history.map(item=>{const row=document.createElement("div");row.className="activity-row";const left=document.createElement("span");left.textContent=item.label;const right=document.createElement("b");right.textContent=(item.amount>=0?"+":"")+fmt(Math.abs(item.amount))+(item.label.toLowerCase().includes("ponto")?" pontos":" créditos");row.append(left,right);return row;})); }
+  function nav(view){const id=view||"inicio"; $$(".view").forEach(v=>v.classList.toggle("active-view",v.id==="view-"+id)); $$(".side-link").forEach(a=>a.classList.toggle("active",a.dataset.view===id)); const active=$('[data-view="'+id+'"]'); $("#pageName").textContent=active?active.textContent.trim():id; history.replaceState(null,"","#"+id); $("#sidebar").classList.remove("open"); window.scrollTo({top:0,behavior:"smooth"});}
+  document.addEventListener("click",e=>{const go=e.target.closest("[data-go]");if(go){e.preventDefault();nav(go.dataset.go);} const game=e.target.closest("[data-game]");if(game){nav("jogos");setTimeout(()=>{if(game.dataset.game==="tigrinho")openTiger();},80);} const side=e.target.closest("[data-view]");if(side){e.preventDefault();nav(side.dataset.view);}});
+  $$("[data-view]").forEach(a=>a.addEventListener("click",()=>{}));
+  $("#menuToggle").addEventListener("click",()=>$("#sidebar").classList.toggle("open"));
+  $("#avatarButton").addEventListener("click",()=>nav("perfil"));
+  const route=location.hash.replace("#",""); if(route && $("#view-"+route))nav(route);
+  renderBalances();renderHistory();
 
-  async function loadGameCatalog() {
-    try {
-      const { url, key } = window.AUREON_SUPABASE;
-      const response = await fetch(`${url}/rest/v1/games?select=title,subtitle,description,fictional_credit_cost&slug=eq.aureon-tigrinho&demo_enabled=eq.true`, {
-        headers: { apikey: key, Authorization: `Bearer ${key}` }
-      });
-      if (!response.ok) throw new Error("Catalog unavailable");
-      const games = await response.json();
-      if (games[0]) {
-        const title = document.querySelector(".game-info h3");
-        const desc = document.querySelector(".game-description");
-        const sub = document.querySelector(".game-visual-sub");
-        if (title) title.textContent = games[0].title;
-        if (desc) desc.textContent = games[0].description;
-        if (sub) sub.textContent = games[0].subtitle.toUpperCase();
-      }
-    } catch (error) {
-      console.info("AUREON: usando catálogo estático de demonstração.");
-    }
-  }
-  loadGameCatalog();
+  // Supabase Auth: public publishable key only. No service-role key is ever sent to the browser.
+  let supabase=null, currentUser=null;
+  try { if(window.supabase?.createClient && window.AUREON_SUPABASE?.url && window.AUREON_SUPABASE?.key) supabase=window.supabase.createClient(window.AUREON_SUPABASE.url,window.AUREON_SUPABASE.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}); } catch(e){console.warn("Auth não inicializado",e);}
+  const modal=$("#authModal"), authMessage=$("#authMessage");
+  const showAuth=(mode="login")=>{modal.classList.add("open");modal.setAttribute("aria-hidden","false");setAuthMode(mode);};
+  const hideAuth=()=>{modal.classList.remove("open");modal.setAttribute("aria-hidden","true");authMessage.textContent="";};
+  $("#sideAuthBtn").addEventListener("click",()=>showAuth());
+  $("#profileAuth").addEventListener("click",()=>showAuth());
+  $("#closeAuth").addEventListener("click",hideAuth);
+  modal.addEventListener("click",e=>{if(e.target===modal)hideAuth();});
+  function setAuthMode(mode){$$(".auth-tab").forEach(t=>t.classList.toggle("active",t.dataset.auth===mode));$("#loginForm").classList.toggle("hidden-form",mode!=="login");$("#signupForm").classList.toggle("hidden-form",mode!=="signup");$("#recoveryForm").classList.toggle("hidden-form",mode!=="recovery");$("#newPasswordForm").classList.toggle("hidden-form",mode!=="newpassword");authMessage.textContent="";}
+  $$(".auth-tab").forEach(t=>t.addEventListener("click",()=>setAuthMode(t.dataset.auth)));
+  $("#forgotPassword").addEventListener("click",()=>{ $("#recoveryEmail").value=$("#loginEmail").value;setAuthMode("recovery"); });
+  $$(".back-login").forEach(b=>b.addEventListener("click",()=>setAuthMode("login")));
+  function authError(err){return err?.message||"Não foi possível concluir. Tente novamente.";}
+  function renderUser(user){currentUser=user||null;const name=user?.user_metadata?.display_name||state.profileName||"Visitante";$("#profileName").textContent=name;$("#profileEmail").textContent=user?.email||"Entre para sincronizar sua conta.";$("#profileStatus").textContent=user?"Conta autenticada":"Sessão visitante";$("#profileAvatar").textContent=(name[0]||"A").toUpperCase();$("#avatarButton").textContent=(name[0]||"A").toUpperCase();$("#sideAuthBtn").textContent=user?"Sair da conta":"Entrar / Criar conta";$("#profileAuth").textContent=user?"Sair da conta":"Entrar / Criar conta";$("#displayName").value=state.profileName||user?.user_metadata?.display_name||"";}
+  async function syncSession(){if(!supabase){renderUser(null);return;}const {data}=await supabase.auth.getSession();renderUser(data.session?.user||null);supabase.auth.onAuthStateChange((_event,session)=>renderUser(session?.user||null));}
+  syncSession();
+  $("#sideAuthBtn").addEventListener("click",async e=>{if(!currentUser)return; e.stopImmediatePropagation();if(supabase){await supabase.auth.signOut();renderUser(null);toast("Você saiu da sua conta.");}});
+  $("#profileAuth").addEventListener("click",async e=>{if(!currentUser)return; e.stopImmediatePropagation();if(supabase){await supabase.auth.signOut();renderUser(null);toast("Você saiu da sua conta.");}});
+  $("#loginForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabase){authMessage.textContent="Conexão de autenticação indisponível. Confira a configuração do Supabase.";return;}const btn=e.submitter;btn.disabled=true;authMessage.textContent="Verificando acesso…";try{const {data,error}=await supabase.auth.signInWithPassword({email:$("#loginEmail").value.trim(),password:$("#loginPassword").value});if(error)throw error;renderUser(data.user);authMessage.textContent="Acesso confirmado.";setTimeout(hideAuth,700);}catch(err){authMessage.textContent=authError(err);}finally{btn.disabled=false;}});
+  $("#signupForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabase){authMessage.textContent="Conexão de autenticação indisponível.";return;}const btn=e.submitter;btn.disabled=true;authMessage.textContent="Criando sua conta…";const name=$("#signupName").value.trim();try{const {data,error}=await supabase.auth.signUp({email:$("#signupEmail").value.trim(),password:$("#signupPassword").value,options:{data:{display_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;state.profileName=name;save();renderUser(data.user);authMessage.textContent=data.session?"Conta criada com sucesso.":"Cadastro iniciado. Confira seu e-mail para confirmar a conta.";if(data.session)setTimeout(hideAuth,900);}catch(err){authMessage.textContent=authError(err);}finally{btn.disabled=false;}});
+  $("#recoveryForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabase){authMessage.textContent="Conexão de autenticação indisponível.";return;}const btn=e.submitter;btn.disabled=true;try{const {error}=await supabase.auth.resetPasswordForEmail($("#recoveryEmail").value.trim(),{redirectTo:location.origin+location.pathname+"#redefinir"});if(error)throw error;authMessage.textContent="Se o e-mail estiver cadastrado, você receberá um link de redefinição.";}catch(err){authMessage.textContent=authError(err);}finally{btn.disabled=false;}});
+  $("#newPasswordForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabase){authMessage.textContent="Conexão de autenticação indisponível.";return;}const btn=e.submitter;btn.disabled=true;try{const {error}=await supabase.auth.updateUser({password:$("#newPassword").value});if(error)throw error;authMessage.textContent="Senha atualizada. Você já pode entrar.";setTimeout(()=>{history.replaceState(null,"",location.pathname);setAuthMode("login");},1200);}catch(err){authMessage.textContent=authError(err);}finally{btn.disabled=false;}});
+  if(location.hash.includes("access_token")||location.hash.includes("type=recovery")){showAuth("newpassword");}
+  $("#saveProfile").addEventListener("click",()=>{state.profileName=$("#displayName").value.trim().slice(0,32);save();renderUser(currentUser);toast("Nome atualizado neste dispositivo.");});
 
-  const format = value => value.toLocaleString("pt-BR");
-  const updateBalance = () => { balanceEl.textContent = format(balance); };
+  // Daily presence reward: fictional credits only, gated to one claim per rolling 24 hours.
+  const DAY=24*60*60*1000, DAILY=25;
+  function dailyReady(){return !state.lastDaily||Date.now()-state.lastDaily>=DAY;}
+  function updateDaily(){const ready=dailyReady();$("#claimDaily").disabled=!ready;$("#claimDaily").textContent=ready?"Resgatar +25":"Já resgatado";$("#dailyTimer").textContent=ready?"Disponível agora":"Próxima recompensa em "+remaining(state.lastDaily+DAY);}
+  function remaining(t){const ms=Math.max(0,t-Date.now()),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return h+"h "+m+"min";}
+  $("#claimDaily").addEventListener("click",()=>{if(!dailyReady()){toast("A recompensa fica disponível após 24 horas.");return;}state.lastDaily=Date.now();credit(DAILY);state.points+=5;record("Bônus diário de presença",DAILY);updateDaily();renderBalances();toast("+25 créditos fictícios e +5 pontos!");});
+  $("#dailyChest").addEventListener("click",()=>{if(state.lastChest&&Date.now()-state.lastChest<DAY){toast("O baú diário volta em 24 horas.");return;}state.lastChest=Date.now();const reward=25+Math.floor(Math.random()*26);credit(reward);state.chests=Math.max(0,state.chests-1);record("Baú diário",reward);renderBalances();toast("Baú aberto: +"+reward+" créditos fictícios!");});
+  $("#specialChest").addEventListener("click",()=>{if(state.points<500){toast("Você precisa de 500 pontos fictícios para este baú.");return;}state.points-=500;const reward=100;credit(reward);record("Baú celestial",reward);renderBalances();toast("Baú celestial: +100 créditos fictícios!");});
+  updateDaily();setInterval(updateDaily,60000);
 
-  openButton.addEventListener("click", () => {
-    gamePanel.classList.remove("hidden");
-    gamePanel.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  closeButton.addEventListener("click", () => {
-    gamePanel.classList.add("hidden");
-    document.getElementById("jogos").scrollIntoView({ behavior: "smooth" });
-  });
+  // Original slot demo.
+  const symbols=["🐯","💎","👑","⭐","🪙"];let tigerRounds=0;
+  function openTiger(){if($("#tigerModal"))return;const panel=document.createElement("div");panel.className="modal-backdrop open";panel.id="tigerModal";panel.innerHTML='<section class="auth-modal tiger-modal"><button class="modal-close" id="closeTiger">×</button><p class="eyebrow">AUREON ORIGINALS · DEMO</p><h2 class="tiger-title">Fortuna da Selva</h2><div class="tiger-reels"><span id="tiger0">🐯</span><span id="tiger1">💎</span><span id="tiger2">👑</span></div><p id="tigerMessage" class="auth-message">Rodada de teste: 10 créditos fictícios.</p><button class="gold-button full-button" id="tigerSpin">Girar · 10 créditos</button><small class="auth-footnote">Resultados simulados. Sem dinheiro ou prêmios reais.</small></section>';document.body.append(panel);$("#closeTiger",panel).onclick=()=>panel.remove();panel.addEventListener("click",e=>{if(e.target===panel)panel.remove();});$("#tigerSpin",panel).onclick=()=>{if(!spend(10))return;const btn=$("#tigerSpin",panel);btn.disabled=true;let ticks=0;const timer=setInterval(()=>{$$(".tiger-reels span",panel).forEach(el=>el.textContent=symbols[Math.floor(Math.random()*symbols.length)]);if(++ticks>=12){clearInterval(timer);const result=Array.from({length:3},()=>symbols[Math.floor(Math.random()*symbols.length)]);result.forEach((s,i)=>$("#tiger"+i,panel).textContent=s);const triple=result.every(s=>s===result[0]);const pair=!triple&&new Set(result).size===2;let reward=triple?50:pair?20:0;if(reward)credit(reward);tigerRounds++;$("#tigerMessage",panel).textContent=triple?"Trinca especial! +50 créditos fictícios.":pair?"Par encontrado! +20 créditos fictícios.":"Rodada concluída. Tente novamente!";record("Slot Tigrinho · rodada "+tigerRounds,reward-10);btn.disabled=false;}},85);};}
+  
+  // Mines: 5x5 board, 4 hidden traps, no wager or money value.
+  let mineState={active:false,traps:[],opened:[],found:0};
+  function drawMines(){const board=$("#minesBoard");board.replaceChildren();for(let i=0;i<25;i++){const b=document.createElement("button");b.className="mine-cell";b.textContent="✧";b.setAttribute("aria-label","Casa "+(i+1));b.disabled=!mineState.active||mineState.opened.includes(i);b.onclick=()=>revealMine(i);board.append(b);}}
+  function startMines(){if(!spend(10))return;mineState={active:true,traps:[],opened:[],found:0};while(mineState.traps.length<4){const n=Math.floor(Math.random()*25);if(!mineState.traps.includes(n))mineState.traps.push(n);}$("#crystalsFound").textContent="0";$("#minesMessage").textContent="Encontre cristais e evite as armadilhas.";drawMines();}
+  function revealMine(i){if(!mineState.active||mineState.opened.includes(i))return;mineState.opened.push(i);const cell=$("#minesBoard").children[i];cell.classList.add("revealed");if(mineState.traps.includes(i)){cell.textContent="✹";cell.classList.add("bomb");mineState.active=false;mineState.traps.forEach(n=>{const c=$("#minesBoard").children[n];c.textContent="✹";c.classList.add("bomb");});$("#minesMessage").textContent="Armadilha encontrada. Fim da rodada demonstrativa.";record("Minas · armadilha", -10);}else{cell.textContent="💎";mineState.found++;$("#crystalsFound").textContent=mineState.found;if(mineState.found===5){mineState.active=false;credit(30);state.points+=10;renderBalances();record("Minas · 5 cristais",30);$("#minesMessage").textContent="Excelente! +30 créditos fictícios e +10 pontos.";}else{$("#minesMessage").textContent="Cristal encontrado! Continue explorando.";}}drawMines();mineState.opened.forEach(n=>{$("#minesBoard").children[n].disabled=true;});}
+  $("#minesStart").addEventListener("click",startMines);$("#minesReset").addEventListener("click",()=>{mineState={active:false,traps:[],opened:[],found:0};drawMines();$("#minesMessage").textContent="Inicie uma rodada e escolha uma casa.";});drawMines();
 
-  function addHistory(message) {
-    const empty = historyList.querySelector(".empty-history");
-    if (empty) empty.remove();
-    const item = document.createElement("li");
-    item.textContent = message;
-    historyList.prepend(item);
-    while (historyList.children.length > 5) historyList.lastElementChild.remove();
-  }
-
-  spinButton.addEventListener("click", () => {
-    if (balance < 10) {
-      resultMessage.textContent = "Seus créditos de demonstração acabaram. Reinicie a página para testar novamente.";
-      return;
-    }
-    balance -= 10;
-    rounds += 1;
-    updateBalance();
-    spinButton.disabled = true;
-    resultMessage.textContent = "Girando os símbolos…";
-    const result = Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
-    let ticks = 0;
-    const animation = setInterval(() => {
-      result.forEach((_, i) => {
-        document.getElementById("reel" + i).textContent = symbols[Math.floor(Math.random() * symbols.length)];
-      });
-      ticks += 1;
-      if (ticks >= 8) {
-        clearInterval(animation);
-        result.forEach((symbol, i) => { document.getElementById("reel" + i).textContent = symbol; });
-        const allMatch = result.every(symbol => symbol === result[0]);
-        const pair = !allMatch && (result[0] === result[1] || result[1] === result[2] || result[0] === result[2]);
-        let message = "Rodada concluída. Obrigado por testar!";
-        if (allMatch) {
-          balance += 50;
-          message = "Combinação tripla! +50 créditos fictícios.";
-        } else if (pair) {
-          balance += 20;
-          message = "Dois símbolos iguais! +20 créditos fictícios.";
-        } else {
-          message = "Boa tentativa! Esta rodada não teve combinação.";
-        }
-        updateBalance();
-        resultMessage.textContent = message;
-        addHistory("Rodada " + rounds + " · " + result.join("  ") + " · " + message);
-        spinButton.disabled = false;
-      }
-    }, 90);
-  });
+  // Aviator visual flight; no cash-out or stake controls.
+  $("#flightStart").addEventListener("click",()=>{const btn=$("#flightStart");btn.disabled=true;$("#flightStatus").textContent="VOANDO · SIMULAÇÃO";$("#plane").style.left="12%";$("#plane").style.bottom="25%";let x=0;const timer=setInterval(()=>{x+=.1;$("#flightMultiplier").textContent=(1+x).toFixed(2)+"×";$("#plane").style.left=Math.min(78,12+x*11)+"%";$("#plane").style.bottom=Math.min(75,25+x*7)+"%";if(x>=3.5){clearInterval(timer);$("#flightStatus").textContent="VOO FINALIZADO · DEMO";$("#flightMultiplier").textContent=(1+x).toFixed(2)+"×";btn.disabled=false;btn.textContent="Novo voo";}},180);});
+  // Double colour roulette.
+  $("#doubleSpin").addEventListener("click",()=>{const btn=$("#doubleSpin");btn.disabled=true;const colors=[{name:"ROXO",color:"#7048a4"},{name:"DOURADO",color:"#b98a3f"},{name:"VERMELHO",color:"#a94759"}];let ticks=0;const timer=setInterval(()=>{const c=colors[Math.floor(Math.random()*3)];$("#doubleOrb").style.background=c.color;$("#doubleOrb span").textContent=c.name; if(++ticks>=18){clearInterval(timer);$("#doubleResult").textContent="Resultado da simulação: "+c.name+".";btn.disabled=false;}},100);});
+  // Wheel is only a visual, free demo feature.
+  $("#wheelSpin").addEventListener("click",()=>{const btn=$("#wheelSpin");btn.disabled=true;const wheel=$("#rewardWheel");const rotation=1440+Math.floor(Math.random()*720);wheel.style.transform="rotate("+rotation+"deg)";setTimeout(()=>{const reward=10+Math.floor(Math.random()*31);$("#wheelResult").textContent="Giro concluído: +"+reward+" créditos fictícios.";credit(reward);record("Roleta de demonstração",reward);btn.disabled=false;},3100);});
+  renderBalances();renderHistory();
 })();
