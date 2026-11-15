@@ -2,80 +2,153 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#160d2b">
-  <meta name="description" content="AUREON — experiência demonstrativa de jogos originais com créditos fictícios.">
-  <title>AUREON — Experiência Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#100a1d">
+  <meta name="description" content="AUREON — universo de jogos originais em modo de demonstração com créditos fictícios.">
+  <title>AUREON — Universo de entretenimento</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script src="supabase-config.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
-  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
-  <header class="topbar">
-    <a class="brand" href="#" aria-label="AUREON início"><span class="brand-mark">A</span><span>AUREON<span class="brand-dot">.</span></span></a>
-    <nav><a class="nav-link active" href="#jogos">Jogos</a><a class="nav-link" href="#sobre">Sobre</a></nav>
-    <div class="demo-pill"><span></span> MODO DEMONSTRAÇÃO</div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="eyebrow-line"></span> UM NOVO UNIVERSO DE ENTRETENIMENTO</p>
-        <h1>Entre no universo<br><span>AUREON.</span></h1>
-        <p class="hero-text">Uma experiência visual de jogos originais. Explore, descubra e divirta-se usando apenas créditos fictícios.</p>
-        <a class="primary-cta" href="#jogos">Explorar jogos <span>↗</span></a>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#inicio" aria-label="AUREON início"><span class="brand-symbol">A</span><span>AUREON<span class="gold">.</span></span></a>
+      <div class="side-label">MENU PRINCIPAL</div>
+      <nav class="side-nav" aria-label="Navegação principal">
+        <a class="side-link active" href="#inicio" data-view="inicio"><span>⌂</span> Visão geral</a>
+        <a class="side-link" href="#jogos" data-view="jogos"><span>✧</span> Jogos slots</a>
+        <a class="side-link" href="#minas" data-view="minas"><span>▦</span> Minas</a>
+        <a class="side-link" href="#aviator" data-view="aviator"><span>↗</span> Aviator</a>
+        <a class="side-link" href="#double" data-view="double"><span>◉</span> Double</a>
+        <a class="side-link" href="#roleta" data-view="roleta"><span>◎</span> Roleta</a>
+        <a class="side-link" href="#baus" data-view="baus"><span>♜</span> Baús</a>
+        <a class="side-link" href="#pontos" data-view="pontos"><span>✦</span> Pontos</a>
+      </nav>
+      <div class="side-label side-label-bottom">CONTA</div>
+      <nav class="side-nav">
+        <a class="side-link" href="#perfil" data-view="perfil"><span>◌</span> Meu perfil</a>
+        <a class="side-link" href="#carteira" data-view="carteira"><span>◇</span> Carteira demo</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="responsible-mini"><span>✦</span><div><b>Modo demonstração</b><small>Sem dinheiro real ou prêmios.</small></div></div>
+        <button class="side-login" id="sideAuthBtn">Entrar / Criar conta</button>
       </div>
-      <div class="hero-art" aria-hidden="true">
-        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
-        <div class="hero-gem">✦</div><div class="hero-spark spark-a">✧</div><div class="hero-spark spark-b">✦</div>
-        <div class="hero-caption">PLAY · DISCOVER · ENJOY</div>
-      </div>
-    </section>
+    </aside>
 
-    <section class="wallet-strip" aria-label="Saldo demonstrativo">
-      <div><span class="wallet-label">SEU SALDO DE TESTE</span><strong id="balance">1.000</strong><span class="wallet-note">créditos fictícios</span></div>
-      <div class="wallet-separator"></div>
-      <div class="wallet-explain"><span class="wallet-icon">◇</span><span>Sem depósitos, saques ou prêmios em dinheiro.<br><b>Somente uma simulação de entretenimento.</b></span></div>
-    </section>
-
-    <section id="jogos" class="games-section">
-      <div class="section-heading"><div><p class="eyebrow">SELEÇÃO AUREON</p><h2>Jogos em destaque</h2></div><span class="section-count">01 EXPERIÊNCIA DISPONÍVEL</span></div>
-      <article class="game-card">
-        <div class="game-visual tiger-visual">
-          <div class="game-tag">ORIGINAL · DEMO</div>
-          <div class="tiger-emblem">🐯</div>
-          <div class="game-visual-title">TIGRINHO</div>
-          <div class="game-visual-sub">FORTUNA DA SELVA</div>
-          <div class="visual-coin coin-one">✦</div><div class="visual-coin coin-two">◇</div>
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="menuToggle" aria-label="Abrir menu">☰</button>
+        <div class="breadcrumb"><span>UNIVERSO AUREON</span><b>/</b><strong id="pageName">Visão geral</strong></div>
+        <div class="top-actions">
+          <div class="demo-chip"><i></i> DEMO</div>
+          <button class="balance-chip" data-go="carteira"><span>✦</span><b id="headerBalance">1.000</b><small>créditos</small></button>
+          <button class="avatar-button" id="avatarButton">A</button>
         </div>
-        <div class="game-info">
-          <div><p class="game-kicker">AUREON ORIGINALS</p><h3>AUREON Tigrinho</h3><p class="game-description">Uma aventura dourada com símbolos exclusivos, animações e resultados simulados.</p></div>
-          <div class="game-meta"><span><i class="status-dot"></i> Disponível para testar</span><span>1 jogador · Demo</span></div>
-          <button class="play-button" id="openGame">Jogar demonstração <span>→</span></button>
-        </div>
-      </article>
-    </section>
+      </header>
 
-    <section id="gamePanel" class="play-section hidden">
-      <div class="section-heading"><div><p class="eyebrow">AUREON ORIGINALS</p><h2>AUREON Tigrinho</h2></div><button class="text-button" id="closeGame">← Voltar aos jogos</button></div>
-      <div class="machine">
-        <div class="machine-top"><span>FORTUNA DA SELVA</span><span class="machine-demo">DEMO</span></div>
-        <div class="reels" aria-label="Resultado da rodada">
-          <div class="reel" id="reel0">🐯</div><div class="reel" id="reel1">💎</div><div class="reel" id="reel2">👑</div>
+      <section class="view active-view" id="view-inicio">
+        <div class="welcome-row">
+          <div><p class="eyebrow">SEU PRÓXIMO UNIVERSO COMEÇA AQUI</p><h1>Bem-vindo à <span>AUREON.</span></h1><p class="muted">Explore jogos originais, conquiste pontos fictícios e descubra novas experiências.</p></div>
+          <div class="welcome-orb"><span>✧</span><i></i><b></b></div>
         </div>
-        <p id="resultMessage" class="result-message" aria-live="polite">Toque em girar para iniciar uma rodada de demonstração.</p>
-        <div class="machine-controls"><div class="bet-control"><span>CUSTO DA RODADA</span><strong>10 créditos fictícios</strong></div><button id="spinButton" class="spin-button">GIRAR <span>✦</span></button></div>
-        <p class="machine-footnote">Simulação recreativa. Os resultados não representam dinheiro ou possibilidade de ganho financeiro.</p>
-      </div>
-      <div class="history-panel"><h3>Histórico de demonstração</h3><ol id="historyList"><li class="empty-history">Suas rodadas de teste aparecerão aqui.</li></ol></div>
-    </section>
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-icon">✦</span><small>SALDO DE TESTE</small><strong id="homeBalance">1.000</strong><em>créditos fictícios</em></article>
+          <article class="stat-card"><span class="stat-icon">◇</span><small>SEUS PONTOS</small><strong id="homePoints">0</strong><em>pontos de experiência</em></article>
+          <article class="stat-card"><span class="stat-icon">♜</span><small>BAÚS DISPONÍVEIS</small><strong id="homeChests">1</strong><em>recompensas de demonstração</em></article>
+          <article class="stat-card daily-card"><span class="stat-icon">☼</span><small>BÔNUS DIÁRIO</small><strong>+25</strong><em>créditos fictícios / 24h</em><button class="mini-action" data-go="pontos">Ver recompensa</button></article>
+        </div>
+        <div class="section-title"><div><p class="eyebrow">ESCOLHA SUA EXPERIÊNCIA</p><h2>Jogos em destaque</h2></div><a href="#jogos" data-go="jogos">Ver todos <span>↗</span></a></div>
+        <div class="featured-grid">
+          <article class="featured-card feature-tiger"><div class="feature-art"><span class="feature-kicker">AUREON ORIGINAL</span><div class="animal">🐯</div><div class="feature-name">TIGRINHO</div><small>FORTUNA DA SELVA</small></div><div class="feature-copy"><div><small>SLOTS · DEMO</small><h3>AUREON Tigrinho</h3><p>Uma aventura dourada com símbolos exclusivos.</p></div><button class="gold-button" data-game="tigrinho">Jogar demo <span>→</span></button></div></article>
+          <article class="featured-card feature-mines"><div class="feature-art"><span class="feature-kicker">ESTRATÉGIA</span><div class="animal">💎</div><div class="feature-name">MINAS</div><small>CAMPO DE CRISTAIS</small></div><div class="feature-copy"><div><small>MINAS · DEMO</small><h3>Campo de Cristais</h3><p>Encontre cristais em um tabuleiro de teste.</p></div><button class="gold-button" data-go="minas">Jogar demo <span>→</span></button></div></article>
+        </div>
+        <div class="section-title compact-title"><div><p class="eyebrow">DESCUBRA MAIS</p><h2>Todo o universo</h2></div></div>
+        <div class="quick-grid">
+          <button class="quick-card" data-go="aviator"><span class="quick-icon">✈</span><b>Aviator</b><small>Voo simulado</small><span class="quick-arrow">↗</span></button>
+          <button class="quick-card" data-go="double"><span class="quick-icon">◉</span><b>Double</b><small>Giro de cores</small><span class="quick-arrow">↗</span></button>
+          <button class="quick-card" data-go="roleta"><span class="quick-icon">◎</span><b>Roleta</b><small>Roda de diversão</small><span class="quick-arrow">↗</span></button>
+          <button class="quick-card" data-go="baus"><span class="quick-icon">♜</span><b>Baús</b><small>Prêmios fictícios</small><span class="quick-arrow">↗</span></button>
+        </div>
+      </section>
 
-    <section id="sobre" class="about-section"><div class="about-symbol">✧</div><div><p class="eyebrow">ENTRETENIMENTO RESPONSÁVEL</p><h2>Jogue pelo universo.<br><span>Não pelo dinheiro.</span></h2><p>A AUREON está em fase de protótipo. Esta versão usa exclusivamente créditos fictícios, sem apostas com valor monetário, depósitos, saques ou prêmios reais.</p></div></section>
-  </main>
-  <footer><a class="brand footer-brand" href="#"><span class="brand-mark">A</span><span>AUREON<span class="brand-dot">.</span></span></a><span>© 2026 AUREON · Protótipo demonstrativo</span><a href="#sobre">Entretenimento responsável</a></footer>
+      <section class="view" id="view-jogos">
+        <div class="page-intro"><p class="eyebrow">AUREON ORIGINALS</p><h1>Jogos <span>slots.</span></h1><p class="muted">Experiências de rolagem e símbolos em modo demonstrativo.</p></div>
+        <div class="slots-grid">
+          <article class="slot-card"><div class="slot-art tiger-art"><span>🐯</span><b>TIGRINHO</b><small>FORTUNA DA SELVA</small></div><div class="slot-details"><div><small>ORIGINAL · DEMO</small><h3>AUREON Tigrinho</h3><p>Três rolos, símbolos especiais e créditos de teste.</p></div><button class="gold-button" data-game="tigrinho">Abrir jogo →</button></div></article>
+          <article class="slot-card"><div class="slot-art rabbit-art"><span>🐰</span><b>COELHINHO</b><small>JARDIM ENCANTADO</small></div><div class="slot-details"><div><small>EM BREVE · CONCEITO</small><h3>AUREON Coelhinho</h3><p>Um universo de cores, sorte e fantasia.</p></div><button class="soft-button" disabled>Em breve</button></div></article>
+          <article class="slot-card"><div class="slot-art dragon-art"><span>🐉</span><b>DRAGÃO</b><small>TESOURO CELESTIAL</small></div><div class="slot-details"><div><small>EM BREVE · CONCEITO</small><h3>AUREON Dragão</h3><p>Uma jornada lendária por símbolos místicos.</p></div><button class="soft-button" disabled>Em breve</button></div></article>
+        </div>
+      </section>
+
+      <section class="view" id="view-minas">
+        <div class="page-intro"><p class="eyebrow">DESAFIO DE LÓGICA</p><h1>Campo de <span>cristais.</span></h1><p class="muted">Abra casas e encontre cristais. Esta versão usa somente pontos de demonstração.</p></div>
+        <div class="game-layout"><div class="game-stage"><div class="stage-head"><div><small>RODADA DE TESTE</small><h2>MINAS</h2></div><span class="demo-tag">SIMULAÇÃO</span></div><div class="mines-board" id="minesBoard"></div><div class="game-controls"><button class="gold-button" id="minesStart">Nova rodada · 10 créditos</button><button class="soft-button" id="minesReset">Reiniciar</button></div><p class="stage-message" id="minesMessage">Inicie uma rodada e escolha uma casa.</p></div><aside class="game-aside"><h3>Como funciona</h3><p>O tabuleiro contém cristais e armadilhas simuladas. Encontre cristais para ganhar pontos fictícios. A rodada termina ao encontrar uma armadilha.</p><div class="aside-stat"><small>CRISTAIS ENCONTRADOS</small><b id="crystalsFound">0</b></div><div class="aside-stat"><small>VALOR DA RODADA</small><b>10 créditos demo</b></div></aside></div>
+      </section>
+
+      <section class="view" id="view-aviator">
+        <div class="page-intro"><p class="eyebrow">SIMULAÇÃO DE VOO</p><h1>AUREON <span>Aviator.</span></h1><p class="muted">Acompanhe um voo animado sem apostas ou prêmios em dinheiro.</p></div>
+        <div class="aviator-stage"><div class="flight-sky"><div class="stars"></div><div class="flight-path"></div><div class="plane" id="plane">✈</div><div class="flight-multiplier" id="flightMultiplier">1.00×</div><div class="flight-status" id="flightStatus">PRONTO PARA DECOLAR</div></div><div class="aviator-controls"><div><small>SIMULAÇÃO VISUAL</small><b>Voo aleatório</b></div><button class="gold-button" id="flightStart">Iniciar voo</button></div></div>
+      </section>
+
+      <section class="view" id="view-double">
+        <div class="page-intro"><p class="eyebrow">RODADA DE CORES</p><h1>AUREON <span>Double.</span></h1><p class="muted">Veja a roleta de cores girar em uma experiência de demonstração.</p></div>
+        <div class="double-stage"><div class="double-orb" id="doubleOrb"><span>?</span></div><p id="doubleResult">Aguardando o próximo giro.</p><button class="gold-button" id="doubleSpin">Girar demonstração</button><small>Resultado aleatório apenas para entretenimento.</small></div>
+      </section>
+
+      <section class="view" id="view-roleta">
+        <div class="page-intro"><p class="eyebrow">GIRO DE RECOMPENSAS</p><h1>Roleta <span>AUREON.</span></h1><p class="muted">Uma roda de bônus fictícios para experimentar a interface.</p></div>
+        <div class="wheel-stage"><div class="wheel-pointer">▼</div><div class="wheel" id="rewardWheel"><div class="wheel-center">A</div></div><button class="gold-button" id="wheelSpin">Girar roleta</button><p id="wheelResult">Um giro gratuito de demonstração.</p></div>
+      </section>
+
+      <section class="view" id="view-baus">
+        <div class="page-intro"><p class="eyebrow">RECOMPENSAS DE EXPERIÊNCIA</p><h1>Baús <span>místicos.</span></h1><p class="muted">Abra baús de demonstração e receba créditos fictícios ou pontos.</p></div>
+        <div class="chest-grid"><article class="chest-card"><div>♜</div><small>BAÚ DIÁRIO</small><h3>Baú de Âmbar</h3><p>Uma recompensa gratuita a cada 24 horas.</p><b>GRATUITO</b><button class="gold-button" id="dailyChest">Abrir baú</button></article><article class="chest-card locked"><div>♜</div><small>BAÚ ESPECIAL</small><h3>Baú Celestial</h3><p>Desbloqueie ao acumular 500 pontos fictícios.</p><b>500 PONTOS</b><button class="soft-button" id="specialChest">Ver progresso</button></article></div>
+      </section>
+
+      <section class="view" id="view-pontos">
+        <div class="page-intro"><p class="eyebrow">PROGRESSO E CONQUISTAS</p><h1>Central de <span>pontos.</span></h1><p class="muted">Pontos sem valor monetário, válidos somente dentro desta demonstração.</p></div>
+        <div class="points-hero"><div><small>SEUS PONTOS AUREON</small><strong id="pointsTotal">0</strong><p>Continue explorando para aumentar sua pontuação.</p></div><div class="points-star">✦</div></div>
+        <div class="daily-panel"><div class="daily-icon">☼</div><div class="daily-copy"><small>RECOMPENSA DE PRESENÇA</small><h3>Volte a cada 24 horas</h3><p>Receba 25 créditos fictícios por dia. O intervalo é contado a partir do último resgate neste dispositivo.</p><span id="dailyTimer">Disponível agora</span></div><button class="gold-button" id="claimDaily">Resgatar +25</button></div>
+        <div class="section-title"><div><p class="eyebrow">ATIVIDADE</p><h2>Histórico de pontos</h2></div></div><div class="activity-list" id="pointsHistory"><p>Nenhuma atividade registrada ainda.</p></div>
+      </section>
+
+      <section class="view" id="view-perfil">
+        <div class="page-intro"><p class="eyebrow">SUA IDENTIDADE</p><h1>Meu <span>perfil.</span></h1><p class="muted">Gerencie os dados da sua conta de demonstração.</p></div>
+        <div class="profile-card"><div class="profile-avatar" id="profileAvatar">A</div><div class="profile-data"><small>CONTA AUREON</small><h2 id="profileName">Visitante</h2><p id="profileEmail">Entre para sincronizar sua conta.</p><span class="profile-status" id="profileStatus">Sessão visitante</span></div><button class="soft-button" id="profileAuth">Entrar / Criar conta</button></div>
+        <div class="settings-card"><h3>Dados do perfil</h3><label>Nome de exibição<input id="displayName" type="text" maxlength="32" placeholder="Como quer ser chamado?"></label><button class="gold-button" id="saveProfile">Salvar nome neste dispositivo</button><p class="muted tiny">Nome salvo localmente nesta versão de demonstração.</p></div>
+      </section>
+
+      <section class="view" id="view-carteira">
+        <div class="page-intro"><p class="eyebrow">CRÉDITOS FICTÍCIOS</p><h1>Carteira <span>demo.</span></h1><p class="muted">Painel visual de carteira. Nenhuma transação financeira é realizada.</p></div>
+        <div class="wallet-hero"><small>SALDO DISPONÍVEL PARA TESTES</small><strong id="walletBalance">1.000</strong><span>créditos fictícios</span></div>
+        <div class="finance-grid"><article class="finance-card"><span>＋</span><h3>Depósito</h3><p>O painel de depósito está em modo de demonstração. Não há integração de pagamento.</p><button class="soft-button" disabled>Indisponível na demo</button></article><article class="finance-card"><span>↗</span><h3>Saque</h3><p>Não existe saldo monetário, prêmio em dinheiro ou retirada nesta versão.</p><button class="soft-button" disabled>Indisponível na demo</button></article></div>
+        <div class="notice-panel"><span>ⓘ</span><p>Os créditos e pontos AUREON são fictícios, não podem ser comprados, vendidos, transferidos ou convertidos em dinheiro.</p></div>
+      </section>
+
+      <footer class="main-footer"><span>© 2026 AUREON GAMES</span><span>PROTÓTIPO · ENTRETENIMENTO RESPONSÁVEL</span><a href="#sobre">Sobre o projeto</a></footer>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="authModal" aria-hidden="true">
+    <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <button class="modal-close" id="closeAuth" aria-label="Fechar">×</button>
+      <a class="brand modal-brand" href="#inicio"><span class="brand-symbol">A</span><span>AUREON<span class="gold">.</span></span></a>
+      <div class="auth-tabs"><button class="auth-tab active" data-auth="login">Entrar</button><button class="auth-tab" data-auth="signup">Criar conta</button></div>
+      <form id="loginForm" class="auth-form"><p class="eyebrow">BEM-VINDO DE VOLTA</p><h2 id="authTitle">Acesse sua conta.</h2><label>E-mail<input type="email" id="loginEmail" autocomplete="email" required placeholder="voce@email.com"></label><label>Senha<input type="password" id="loginPassword" autocomplete="current-password" required minlength="6" placeholder="Sua senha"></label><button class="gold-button full-button" type="submit">Entrar na AUREON</button><button class="auth-link" type="button" id="forgotPassword">Esqueci minha senha</button></form>
+      <form id="signupForm" class="auth-form hidden-form"><p class="eyebrow">FAÇA PARTE DO UNIVERSO</p><h2>Crie sua conta.</h2><label>Nome<input type="text" id="signupName" maxlength="32" autocomplete="name" required placeholder="Seu nome"></label><label>E-mail<input type="email" id="signupEmail" autocomplete="email" required placeholder="voce@email.com"></label><label>Senha<input type="password" id="signupPassword" minlength="8" autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"></label><button class="gold-button full-button" type="submit">Criar conta</button><p class="auth-footnote">Você poderá receber um e-mail para confirmar o cadastro.</p></form>
+      <form id="recoveryForm" class="auth-form hidden-form"><p class="eyebrow">RECUPERAÇÃO DE ACESSO</p><h2>Redefinir senha.</h2><p class="muted">Informe seu e-mail para receber um link seguro de redefinição.</p><label>E-mail<input type="email" id="recoveryEmail" autocomplete="email" required placeholder="voce@email.com"></label><button class="gold-button full-button" type="submit">Enviar link</button><button class="auth-link back-login" type="button">Voltar ao login</button></form>
+      <form id="newPasswordForm" class="auth-form hidden-form"><p class="eyebrow">NOVA CREDENCIAL</p><h2>Escolha uma senha.</h2><label>Nova senha<input type="password" id="newPassword" minlength="8" autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"></label><button class="gold-button full-button" type="submit">Salvar nova senha</button></form>
+      <p class="auth-message" id="authMessage" role="status"></p>
+      <p class="auth-disclaimer">Conta de acesso ao protótipo. Nenhuma aposta ou operação financeira real.</p>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="demo-ribbon">MODO DEMONSTRAÇÃO · CRÉDITOS SEM VALOR MONETÁRIO</div>
 </body>
 </html>
