@@ -10,6 +10,28 @@
   let balance = 1000;
   let rounds = 0;
 
+  async function loadGameCatalog() {
+    try {
+      const { url, key } = window.AUREON_SUPABASE;
+      const response = await fetch(`${url}/rest/v1/games?select=title,subtitle,description,fictional_credit_cost&slug=eq.aureon-tigrinho&demo_enabled=eq.true`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` }
+      });
+      if (!response.ok) throw new Error("Catalog unavailable");
+      const games = await response.json();
+      if (games[0]) {
+        const title = document.querySelector(".game-info h3");
+        const desc = document.querySelector(".game-description");
+        const sub = document.querySelector(".game-visual-sub");
+        if (title) title.textContent = games[0].title;
+        if (desc) desc.textContent = games[0].description;
+        if (sub) sub.textContent = games[0].subtitle.toUpperCase();
+      }
+    } catch (error) {
+      console.info("AUREON: usando catálogo estático de demonstração.");
+    }
+  }
+  loadGameCatalog();
+
   const format = value => value.toLocaleString("pt-BR");
   const updateBalance = () => { balanceEl.textContent = format(balance); };
 
